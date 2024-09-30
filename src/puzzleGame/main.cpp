@@ -200,10 +200,16 @@ public:
         if (num < 0) {
             return;
         }
-        moveOnlyPerson(dir);
-        // 荷物を n 個動かした場合は、人の荷物フラグを降ろし、n 個先に荷物フラグを立てることと等価
-        if (num != 0) {
-            at(_person_pos + dirToVec(dir) * num) |= Object;
+        // 荷物は 0（動かさない）個か1個しか動かせない
+        // それ以外の場合はなにも動かない
+        switch (num) {
+            case 0:
+                moveOnlyPerson(dir);
+                break;
+            case 1:
+                moveOnlyPerson(dir);
+                at(_person_pos + dirToVec(dir)) |= Object;
+                break;
         }
     }
 
