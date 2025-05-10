@@ -1,6 +1,6 @@
-#include <iostream>
 #include <array>
 #include <cctype>
+#include <iostream>
 
 /**
  * @brief マップの幅。
@@ -26,42 +26,42 @@ struct Vec2D
      */
     int y;
 
-    constexpr Vec2D operator -() const
+    constexpr Vec2D operator-() const
     {
         return *this * -1;
     }
 
-    constexpr Vec2D operator +(Vec2D const other) const
+    constexpr Vec2D operator+(Vec2D const other) const
     {
         return Vec2D{ x + other.x, y + other.y };
     }
 
-    constexpr Vec2D operator -(Vec2D const other) const
+    constexpr Vec2D operator-(Vec2D const other) const
     {
         return *this + -other;
     }
 
-    constexpr Vec2D operator *(int const factor) const
+    constexpr Vec2D operator*(int const factor) const
     {
         return factor * *this;
     }
 
-    friend constexpr Vec2D operator *(int const factor, Vec2D const self)
+    friend constexpr Vec2D operator*(int const factor, Vec2D const self)
     {
         return Vec2D{ factor * self.x, factor * self.y };
     }
 
-    void operator +=(Vec2D const other)
+    void operator+=(Vec2D const other)
     {
         *this = *this + other;
     }
 
-    void operator -=(Vec2D const other)
+    void operator-=(Vec2D const other)
     {
         *this += -other;
     }
 
-    void operator *=(int const factor)
+    void operator*=(int const factor)
     {
         *this = factor * *this;
     }
@@ -90,28 +90,28 @@ enum Flag
     Goal = 1 << 2,
 };
 
-constexpr Flag operator ~(Flag const self)
+constexpr Flag operator~(Flag const self)
 {
     return static_cast<Flag>(~static_cast<int>(self));
 }
 
-constexpr Flag operator &(Flag const left, Flag const right)
+constexpr Flag operator&(Flag const left, Flag const right)
 {
     return static_cast<Flag>(static_cast<int>(left) & static_cast<int>(right));
 }
 
-constexpr Flag operator |(Flag const left, Flag const right)
+constexpr Flag operator|(Flag const left, Flag const right)
 {
     return static_cast<Flag>(static_cast<int>(left) | static_cast<int>(right));
 }
 
-static Flag &operator &=(Flag &self, Flag const other)
+static Flag &operator&=(Flag &self, Flag const other)
 {
     self = self & other;
     return self;
 }
 
-static Flag &operator |=(Flag &self, Flag const other)
+static Flag &operator|=(Flag &self, Flag const other)
 {
     self = self | other;
     return self;
@@ -222,10 +222,12 @@ private:
     /**
      * @brief 各マスのフラグ。
      */
-    std::array<Flag, Width *Height> _map = {
+    std::array<Flag, Width * Height> _map = {
+        // clang-format off
         None, Goal,   Goal,   None, Person, None,
         None, Object, Object, None, None,   None,
         None, None,   None,   None, None,   None,
+        // clang-format on
     };
 
     /**
@@ -257,16 +259,16 @@ private:
             return -1;
         }
 
-        // 動かす先に荷物がある場合は、そこから更に同じ方向に荷物を動かす必要があるので、
-        // 更に動かすとして動かせるかどうか、何個動かすかを再帰的に計算する
         if (at(next) & Object) {
+            // 動かす先に荷物がある場合は、そこから更に同じ方向に荷物を動かす必要があるので、
+            // 更に動かすとして動かせるかどうか、何個動かすかを再帰的に計算する
             auto prev = calculateObjectLength(next, dir);
             if (prev < 0) {
                 return prev;
             }
             return prev + 1;
-        // 荷物が置かれてない場合は人を動かすだけ
         } else {
+            // 荷物が置かれてない場合は人を動かすだけ
             return 0;
         }
     }
@@ -335,19 +337,19 @@ void draw()
             // なにもないところにはスペースを描画
             char c = ' ';
             auto flag = map.at(col, row);
-            // 荷物があるところには o を描画
             if (flag & Object) {
+                // 荷物があるところには o を描画
                 c = 'o';
-            // 人がいるところには p を描画
             } else if (flag & Person) {
+                // 人がいるところには p を描画
                 c = 'p';
             }
             if (flag & Goal) {
-                // 人、ものがゴールにいる場合は大文字で描画
                 if (c != ' ') {
+                    // 人、ものがゴールにいる場合は大文字で描画
                     c = toupper(c);
-                // 何も無いゴールには . を描画
                 } else {
+                    // 何も無いゴールには . を描画
                     c = '.';
                 }
             }

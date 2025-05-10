@@ -1,0 +1,8 @@
+BasedOnStyle: Microsoft
+AccessModifierOffset: -4
+IndentCaseLabels: true
+Cpp11BracedListStyle: false
+BreakBeforeBinaryOperators: NonAssignment
+BraceWrapping:
+  AfterControlStatement: Never
+  BeforeElse: false
