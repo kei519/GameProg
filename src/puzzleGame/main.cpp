@@ -46,7 +46,7 @@ struct Vec2D
         return factor * *this;
     }
 
-    static friend constexpr Vec2D operator *(int const factor, Vec2D const self)
+    friend constexpr Vec2D operator *(int const factor, Vec2D const self)
     {
         return Vec2D{ factor * self.x, factor * self.y };
     }
