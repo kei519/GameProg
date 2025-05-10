@@ -1,6 +1,9 @@
 #include <array>
 #include <cctype>
+#include <chrono>
+#include <cstdlib>
 #include <iostream>
+#include <thread>
 
 /**
  * @brief マップの幅。
@@ -284,6 +287,18 @@ char input;
  */
 Map map;
 
+bool checkClear()
+{
+    for (auto x = 0; x < Width; x++) {
+        for (auto y = 0; y < Width; y++) {
+            if (map.at(Vec2D{ x, y }) == Flag::Object) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 /**
  * @brief ユーザーからの入力を受け取る。
  */
@@ -366,12 +381,20 @@ void draw()
     cout << endl;
 }
 
-int main(int argc, char **argv)
+[[noreturn]] int main(int argc, char **argv)
 {
     draw();
     while (true) {
         getInput();
         updateGame();
         draw();
+
+        if (checkClear()) {
+            std::cout << "clear!" << std::endl;
+            break;
+        }
+    }
+    while (true) {
+        std::this_thread::sleep_for(std::chrono::hours(100));
     }
 }
