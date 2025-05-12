@@ -161,6 +161,61 @@ class Map
 {
 public:
     /**
+     * @brief `mapString` から生成。
+     *
+     * @param mapString マップ文字列。
+     */
+    Map(char const *mapString)
+    {
+        this->initFromMapString(mapString);
+    }
+
+    /**
+     * @brief `mapString` を用いて初期化。
+     *
+     * @param mapString マップ文字列。
+     */
+    void initFromMapString(char const *mapString)
+    {
+        auto [width, height] = validateAndGetMapSize(mapString);
+        _width = width;
+        _height = height;
+
+        vector<Flag> tmp(width * height);
+        _map.reserve(width * height);
+
+        int pos = 0;
+        for (; *mapString; mapString++) {
+            Flag flag = Flag::None;
+            // ここまで来た場合 mapString には改行文字かオブジェクトの文字しか含まれていない
+            switch (*mapString) {
+                case '\r':
+                case '\n':
+                    continue;
+                case '.':
+                    flag |= Flag::Goal;
+                    break;
+
+                case 'P':
+                    flag |= Flag::Goal;
+                case 'p':
+                    flag |= Flag::Person;
+                    _person_pos.x = pos % width;
+                    _person_pos.y = pos / width;
+                    break;
+
+                case 'O':
+                    flag |= Flag::Goal;
+                case 'o':
+                    flag |= Flag::Object;
+                    break;
+            }
+            _map.push_back(flag);
+            pos++;
+        }
+    }
+
+    /**
      * @brief マップの幅。
      */
     size_t width()
@@ -225,7 +280,7 @@ private:
     /**
      * @brief 人がいる場所。
      */
-    Vec2D _person_pos = Vec2D{ 4, 0 };
+    Vec2D _person_pos;
 
     size_t _width = 6;
     size_t _height = 3;
@@ -233,13 +288,7 @@ private:
     /**
      * @brief 各マスのフラグ。
      */
-    vector<Flag> _map{
-        // clang-format off
-        None, Goal,   Goal,   None, Person, None,
-        None, Object, Object, None, None,   None,
-        None, None,   None,   None, None,   None,
-        // clang-format on
-    };
+    vector<Flag> _map;
 
     /**
      * @brief 人を `dir` 方向に1マスだけ動かす。このとき動かす先に元々荷物が置かれていた場合、
@@ -283,6 +332,55 @@ private:
             return 0;
         }
     }
+
+    /**
+     * @brief `mapString` が正当か確認し、マップの大きさを返す。
+     *
+     * マップが正当とは
+     *
+     *   - 長方形である
+     *
+     *   - 不正な文字列が含まれていない
+     *
+     * @param mapString マップの文字列表現。
+     * @return マップの大きさ。
+     */
+    static Vec2D validateAndGetMapSize(const char *mapString)
+    {
+        int width = 0;
+        int height = 0;
+        int count = 0;
+        for (; *mapString; mapString++) {
+            // CRLF の場合
+            if (*mapString == '\r' && mapString[1] == '\n') {
+                // CR を読み飛ばす
+                mapString++;
+            }
+
+            switch (*mapString) {
+                case '\n':
+                    if (height == 0) {
+                        width = count;
+                    } else if (count != width) {
+                        throw "マップが長方形ではありません";
+                    }
+                    count = 0;
+                    height++;
+                    break;
+                case ' ':
+                case '.':
+                case 'p':
+                case 'P':
+                case 'o':
+                case 'O':
+                    count++;
+                    break;
+                default:
+                    throw "不正な文字が使われています";
+            }
+        }
+        return { width, height };
+    }
 };
 
 /**
@@ -293,7 +391,9 @@ char input;
 /**
  * @brief 現在のマップの状況を保持する。
  */
-Map map;
+Map map(" .. p \n"
+        " oo   \n"
+        "      \n");
 
 bool checkClear()
 {
@@ -393,14 +493,14 @@ void draw()
 {
     draw();
     while (true) {
-        getInput();
-        updateGame();
-        draw();
-
         if (checkClear()) {
             cout << "clear!" << endl;
             break;
         }
+
+        getInput();
+        updateGame();
+        draw();
     }
     while (true) {
         this_thread::sleep_for(chrono::hours(100));
