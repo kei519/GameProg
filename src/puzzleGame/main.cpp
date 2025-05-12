@@ -1,3 +1,5 @@
+#include <cstring>
+#include <fstream>
 #include <iostream>
 #include <thread>
 #include <vector>
@@ -160,6 +162,10 @@ constexpr Vec2D dirToVec(Direction const dir)
 class Map
 {
 public:
+    Map()
+    {
+    }
+
     /**
      * @brief `mapString` から生成。
      *
@@ -280,10 +286,10 @@ private:
     /**
      * @brief 人がいる場所。
      */
-    Vec2D _person_pos;
+    Vec2D _person_pos = { 0, 0 };
 
-    size_t _width = 6;
-    size_t _height = 3;
+    size_t _width = 0;
+    size_t _height = 0;
 
     /**
      * @brief 各マスのフラグ。
@@ -391,9 +397,7 @@ char input;
 /**
  * @brief 現在のマップの状況を保持する。
  */
-Map map(" .. p \n"
-        " oo   \n"
-        "      \n");
+Map map;
 
 bool checkClear()
 {
@@ -489,8 +493,28 @@ void draw()
     cout << endl;
 }
 
-[[noreturn]] int main(int argc, char **argv)
+int main(int argc, char **argv)
 {
+    // ファイルからのマップ読み込み
+    char stagePath[] = "assets/stageData.txt";
+    ifstream inputFile(stagePath, ifstream::binary);
+
+    inputFile.seekg(0, ifstream::end);
+    auto fileSize = static_cast<int>(inputFile.tellg());
+    if (fileSize == -1) {
+        cout << stagePath << " を読み込めませんでした (" << strerror(errno) << ")" << endl;
+        return 1;
+    }
+    char *mapString = new char[fileSize + 1];
+
+    inputFile.seekg(0, ifstream::beg);
+    inputFile.read(mapString, fileSize);
+
+    mapString[fileSize] = '\0';
+    map.initFromMapString(mapString);
+
+    delete[] mapString;
+
     draw();
     while (true) {
         if (checkClear()) {
