@@ -6,6 +6,17 @@
 
 using namespace std;
 
+#ifdef _DEBUG
+#include <cassert>
+#define DEBUG_ASSERT(expression) assert(expression)
+#else
+#define DEBUG_ASSERT(expression) (void)(expression)
+#endif
+
+#define UNREACHEABLE(msg)                                                                                              \
+    std::cout << (msg) << std::endl;                                                                                   \
+    exit(1)
+
 /**
  * @brief 2次元ベクトルを表す。
  */
@@ -152,7 +163,7 @@ constexpr Vec2D dirToVec(Direction const dir)
             return Vec2D{ 1, 0 };
         default:
             // ここには来ないはず
-            throw "Invalid direction";
+            UNREACHEABLE("Invalid direction");
     }
 }
 
@@ -184,6 +195,9 @@ public:
     void initFromMapString(char const *mapString)
     {
         auto [width, height] = validateAndGetMapSize(mapString);
+        if (isErrorOccurred()) {
+            return;
+        }
         _width = width;
         _height = height;
 
@@ -282,6 +296,27 @@ public:
         }
     }
 
+    /**
+     * @brief 処理の途中でエラーが起きたかどうか。
+     */
+    bool isErrorOccurred()
+    {
+        return _isErrorOccurred;
+    }
+
+    /**
+     * @brief エラー内容。起きていない場合は空文字列を返す。
+     */
+    char const *errorMessage()
+    {
+        if (isErrorOccurred()) {
+            DEBUG_ASSERT(_errorMessage);
+            return _errorMessage;
+        } else {
+            return "";
+        }
+    }
+
 private:
     /**
      * @brief 人がいる場所。
@@ -290,6 +325,9 @@ private:
 
     size_t _width = 0;
     size_t _height = 0;
+
+    bool _isErrorOccurred = false;
+    char const *_errorMessage = nullptr;
 
     /**
      * @brief 各マスのフラグ。
@@ -351,7 +389,7 @@ private:
      * @param mapString マップの文字列表現。
      * @return マップの大きさ。
      */
-    static Vec2D validateAndGetMapSize(const char *mapString)
+    Vec2D validateAndGetMapSize(const char *mapString)
     {
         int width = 0;
         int height = 0;
@@ -368,7 +406,9 @@ private:
                     if (height == 0) {
                         width = count;
                     } else if (count != width) {
-                        throw "マップが長方形ではありません";
+                        _isErrorOccurred = true;
+                        _errorMessage = "マップが長方形ではありません";
+                        return { 0, 0 };
                     }
                     count = 0;
                     height++;
@@ -382,7 +422,9 @@ private:
                     count++;
                     break;
                 default:
-                    throw "不正な文字が使われています";
+                    _isErrorOccurred = true;
+                    _errorMessage = "不正な文字が使われています";
+                    return { 0, 0 };
             }
         }
         return { width, height };
@@ -514,6 +556,12 @@ int main(int argc, char **argv)
     map.initFromMapString(mapString);
 
     delete[] mapString;
+
+    if (map.isErrorOccurred()) {
+        cout << map.errorMessage() << endl;
+        return 1;
+    }
+    cout << map.errorMessage() << endl;
 
     draw();
     while (true) {
