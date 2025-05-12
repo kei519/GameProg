@@ -3,7 +3,14 @@ set(LIB_NAME GameLib)
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     file(GLOB_RECURSE SRCS Windows/*.cpp)
     list(APPEND PRIVATE_INCLUDE_DIRS Windows/Modules/src)
-    list(APPEND PRIVATE_LIBRARIES winmm.lib)
+    list(APPEND PRIVATE_LIBRARIES
+        winmm.lib
+        d3d9.lib
+        dinput8.lib
+        dxguid.lib
+        dsound.lib
+    )
+    list(APPEND PUBLIC_INCLUDE_DIRS Windows)
 else()
     message(SEND_ERROR "not supported platform: ${CMAKE_SYSTEM_NAME}")
 endif()

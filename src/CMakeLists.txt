@@ -1,1 +1,2 @@
 add_subdirectory(puzzleGame)
+add_subdirectory(2DGraphics1)
