@@ -28,6 +28,7 @@ namespace{ //ある程度安定動作するまではずしておく。デバグしにくくて仕方ない。
 using namespace std;
 
 //型別名。コードを短くしたい。
+typedef uint64_t U8;
 typedef unsigned U4; //バイト無符号別名
 typedef unsigned short U2; //2バイト無符号別名
 
@@ -101,7 +102,7 @@ template< class A, class B > inline U4 diff( A* p0, B* p1 ){
 }
 
 //ポインタをアライン
-template< class T > inline T* align( T* p, U4 n ){
+template< class T > inline T* align( T* p, U8 n ){
 	ptrdiff_t address = ptr( p ) - static_cast< char* >( 0 );
 	address += n - 1;
 	address &= ~( n - 1 );
@@ -773,7 +774,7 @@ private:
 	}
 	Heap* getHeap( void* p ){
 		ptrdiff_t address = ptr( p ) - static_cast< char* >( 0 );
-		address &= ~( HEAP_REGION_SIZE - 1 );
+		address &= ~(U8)( HEAP_REGION_SIZE - 1 );
 		return reinterpret_cast< Heap* >( address );
 	}
 #ifdef USE_DEBUG_INFO
