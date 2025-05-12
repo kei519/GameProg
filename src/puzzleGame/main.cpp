@@ -5,6 +5,8 @@
 #include <iostream>
 #include <thread>
 
+using namespace std;
+
 /**
  * @brief マップの幅。
  */
@@ -225,7 +227,7 @@ private:
     /**
      * @brief 各マスのフラグ。
      */
-    std::array<Flag, Width * Height> _map = {
+    array<Flag, Width * Height> _map = {
         // clang-format off
         None, Goal,   Goal,   None, Person, None,
         None, Object, Object, None, None,   None,
@@ -304,7 +306,7 @@ bool checkClear()
  */
 void getInput()
 {
-    std::cin >> input;
+    cin >> input;
 }
 
 /**
@@ -390,11 +392,11 @@ void draw()
         draw();
 
         if (checkClear()) {
-            std::cout << "clear!" << std::endl;
+            cout << "clear!" << endl;
             break;
         }
     }
     while (true) {
-        std::this_thread::sleep_for(std::chrono::hours(100));
+        this_thread::sleep_for(chrono::hours(100));
     }
 }
