@@ -290,7 +290,7 @@ Map map;
 bool checkClear()
 {
     for (auto x = 0; x < Width; x++) {
-        for (auto y = 0; y < Width; y++) {
+        for (auto y = 0; y < Height; y++) {
             if (map.at(Vec2D{ x, y }) == Flag::Object) {
                 return false;
             }
