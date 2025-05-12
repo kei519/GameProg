@@ -97,7 +97,7 @@ void Texture::write( const char* filename ){
 	mImpl->write( filename );
 }
 
-Texture::Texture( const Impl* ) : mImpl( 0 ){ //ƒkƒ‹ƒ|‚©‚ç‚Ì©“®¶¬
+Texture::Texture( const Impl* ) : mImpl( 0 ){ //ãƒŒãƒ«ãƒã‹ã‚‰ã®è‡ªå‹•ç”Ÿæˆ
 }
 
 bool Texture::operator<( const Texture& o ) const {

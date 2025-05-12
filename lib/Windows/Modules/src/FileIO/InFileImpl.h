@@ -37,7 +37,7 @@ public:
 	bool isError() const {
 		return mIsError;
 	}
-	void setError(){ //ƒGƒ‰[‚È‚çI‚í‚è‚Å‚ ‚é
+	void setError(){ //ã‚¨ãƒ©ãƒ¼ãªã‚‰çµ‚ã‚ã‚Šã§ã‚ã‚‹
 		mIsError = mIsFinished = true;
 	}
 	void setIterator( It it ){
