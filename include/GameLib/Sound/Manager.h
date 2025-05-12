@@ -9,7 +9,7 @@ public:
 	Manager();
 	static Manager instance();
 
-	//ˆÈ‰ºƒ†[ƒU‚ªŒÄ‚Ô‚±‚Æ‚Í‚È‚¢
+	//ä»¥ä¸‹ãƒ¦ãƒ¼ã‚¶ãŒå‘¼ã¶ã“ã¨ã¯ãªã„
 	static void create( void* windowHandle );
 	static void destroy();
 };

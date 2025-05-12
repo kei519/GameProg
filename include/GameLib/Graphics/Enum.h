@@ -4,7 +4,7 @@
 namespace GameLib{
 namespace Graphics{
 
-//ƒOƒ[ƒoƒ‹—ñ‹“ŒQ
+//ã‚°ãƒ­ãƒ¼ãƒãƒ«åˆ—æŒ™ç¾¤
 enum BlendMode{
 	BLEND_OPAQUE,
 	BLEND_LINEAR,

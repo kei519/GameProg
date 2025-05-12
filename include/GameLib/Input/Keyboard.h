@@ -6,8 +6,8 @@ namespace Input{
 
 class Keyboard{
 public:
-	enum Key{ //isKeyOn,isKeyPressed‚Ìˆø”Ba-z,0-9‚Í‚»‚Ì‚Ü‚Ü•¶š’è”‚Å“ü‚ê‚é‚±‚ÆB
-		KEY_RETURN = 0x80, //128”ÔˆÈ~‚ğg‚¤
+	enum Key{ //isKeyOn,isKeyPressedã®å¼•æ•°ã€‚a-z,0-9ã¯ãã®ã¾ã¾æ–‡å­—å®šæ•°ã§å…¥ã‚Œã‚‹ã“ã¨ã€‚
+		KEY_RETURN = 0x80, //128ç•ªä»¥é™ã‚’ä½¿ã†
 		KEY_TAB,
 		KEY_ESC,
 		KEY_SHIFT,
