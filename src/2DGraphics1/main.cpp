@@ -7,8 +7,13 @@ bool isFirst = true;
 void Framework::update()
 {
     if (isFirst) {
-        cout << "update() called!" << endl;
         isFirst = false;
+        auto vram = videoMemory();
+        for (auto x = 100; x < 200; x++) {
+            for (auto y = 100; y < 200; y++) {
+                vram[x + y * width()] = 0x4cb24c;
+            }
+        }
     }
 }
 
