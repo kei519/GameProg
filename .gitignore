@@ -1,2 +1,4 @@
 /.vim
-/build
+/build*
+/out
+.vs
