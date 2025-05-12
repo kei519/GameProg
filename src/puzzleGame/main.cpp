@@ -1,21 +1,8 @@
-#include <array>
-#include <cctype>
-#include <chrono>
-#include <cstdlib>
 #include <iostream>
 #include <thread>
+#include <vector>
 
 using namespace std;
-
-/**
- * @brief マップの幅。
- */
-size_t constexpr Width = 6;
-
-/**
- * @brief マップの高さ。
- */
-size_t constexpr Height = 3;
 
 /**
  * @brief 2次元ベクトルを表す。
@@ -174,13 +161,29 @@ class Map
 {
 public:
     /**
+     * @brief マップの幅。
+     */
+    size_t width()
+    {
+        return _width;
+    }
+
+    /**
+     * @brief マップの高さ。
+     */
+    size_t height()
+    {
+        return _height;
+    }
+
+    /**
      * @brief マスのフラグへの参照を返す。
      * @param pos 位置。
      * @return フラグへの参照。
      */
     Flag &at(Vec2D const pos)
     {
-        return _map[pos.y * Width + pos.x];
+        return _map[pos.y * width() + pos.x];
     }
 
     /**
@@ -224,10 +227,13 @@ private:
      */
     Vec2D _person_pos = Vec2D{ 4, 0 };
 
+    size_t _width = 6;
+    size_t _height = 3;
+
     /**
      * @brief 各マスのフラグ。
      */
-    array<Flag, Width * Height> _map = {
+    vector<Flag> _map{
         // clang-format off
         None, Goal,   Goal,   None, Person, None,
         None, Object, Object, None, None,   None,
@@ -260,7 +266,7 @@ private:
 
         auto next = pos + dirToVec(dir);
         // 動かす先が範囲外の場合は動かせない
-        if (next.x < 0 || Width <= next.x || next.y < 0 || Height <= next.y) {
+        if (next.x < 0 || width() <= next.x || next.y < 0 || height() <= next.y) {
             return -1;
         }
 
@@ -291,8 +297,8 @@ Map map;
 
 bool checkClear()
 {
-    for (auto x = 0; x < Width; x++) {
-        for (auto y = 0; y < Height; y++) {
+    for (auto x = 0; x < map.width(); x++) {
+        for (auto y = 0; y < map.height(); y++) {
             if (map.at(Vec2D{ x, y }) == Flag::Object) {
                 return false;
             }
@@ -342,15 +348,15 @@ void draw()
 {
     using namespace std;
     // 上の壁を描画
-    for (auto col = 0; col < Width + 2; col++) {
+    for (auto col = 0; col < map.width() + 2; col++) {
         cout << "#";
     }
     cout << "\n";
 
-    for (auto row = 0; row < Height; row++) {
+    for (auto row = 0; row < map.height(); row++) {
         // 左の壁
         cout << "#";
-        for (auto col = 0; col < Width; col++) {
+        for (auto col = 0; col < map.width(); col++) {
             // なにもないところにはスペースを描画
             char c = ' ';
             auto flag = map.at(col, row);
@@ -377,7 +383,7 @@ void draw()
     }
 
     // 下の壁
-    for (auto col = 0; col < Width + 2; col++) {
+    for (auto col = 0; col < map.width() + 2; col++) {
         cout << "#";
     }
     cout << endl;
