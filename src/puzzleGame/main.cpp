@@ -218,6 +218,7 @@ public:
 
                 case 'P':
                     flag |= Flag::Goal;
+                    [[fallthrough]];
                 case 'p':
                     flag |= Flag::Person;
                     _person_pos.x = pos % width;
@@ -226,6 +227,7 @@ public:
 
                 case 'O':
                     flag |= Flag::Goal;
+                    [[fallthrough]];
                 case 'o':
                     flag |= Flag::Object;
                     break;
@@ -516,7 +518,7 @@ void draw()
             if (flag & Goal) {
                 if (c != ' ') {
                     // 人、ものがゴールにいる場合は大文字で描画
-                    c = toupper(c);
+                    c = (char)toupper(c);
                 } else {
                     // 何も無いゴールには . を描画
                     c = '.';
@@ -535,7 +537,7 @@ void draw()
     cout << endl;
 }
 
-int main(int argc, char **argv)
+int main()
 {
     // ファイルからのマップ読み込み
     char stagePath[] = "assets/stageData.txt";
@@ -544,7 +546,9 @@ int main(int argc, char **argv)
     inputFile.seekg(0, ifstream::end);
     auto fileSize = static_cast<int>(inputFile.tellg());
     if (fileSize == -1) {
-        cout << stagePath << " を読み込めませんでした (" << strerror(errno) << ")" << endl;
+        char msg[256];
+        strerror_s(msg, errno);
+        cout << stagePath << " を読み込めませんでした (" << msg << ")" << endl;
         return 1;
     }
     char *mapString = new char[fileSize + 1];
