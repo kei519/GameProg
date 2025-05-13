@@ -601,6 +601,8 @@ void Framework::update()
         cout << map.errorMessage() << endl;
 
         draw();
+        // update() 終了後に描画されるため、最初の描画のために一度抜ける
+        return;
     }
 
     if (isErrorOccured)
