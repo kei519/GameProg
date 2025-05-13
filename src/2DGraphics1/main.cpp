@@ -493,6 +493,19 @@ void updateGame()
  */
 void draw()
 {
+    auto vram = Framework::instance().videoMemory();
+    auto windowWidth = Framework::instance().width();
+    auto windowHeight = Framework::instance().height();
+
+    auto const xMaxSize = windowWidth / map.width();
+    auto const yMaxSize = windowHeight / map.height();
+    auto const boxSize = xMaxSize < yMaxSize ? xMaxSize : yMaxSize;
+
+    if (boxSize <= 0) {
+        cout << "map size is too big to draw in a window" << endl;
+        return;
+    }
+
     // 上の壁を描画
     for (auto col = 0; col < map.width() + 2; col++) {
         cout << "#";
@@ -505,13 +518,19 @@ void draw()
         for (auto col = 0; col < map.width(); col++) {
             // なにもないところにはスペースを描画
             char c = ' ';
+            unsigned color = 0;
+
             auto flag = map.at(col, row);
             if (flag & Object) {
                 // 荷物があるところには o を描画
                 c = 'o';
+                // 荷物があるところは赤で塗る
+                color |= 0xff << 16;
             } else if (flag & Person) {
                 // 人がいるところには p を描画
                 c = 'p';
+                // 人がいるところは緑で塗る
+                color |= 0xff << 8;
             }
             if (flag & Goal) {
                 if (c != ' ') {
@@ -521,8 +540,15 @@ void draw()
                     // 何も無いゴールには . を描画
                     c = '.';
                 }
+                // ゴールは青で塗る
+                color |= 0xff;
             }
             cout << c;
+            for (auto x = col * boxSize; x < (col + 1) * boxSize; x++) {
+                for (auto y = row * boxSize; y < (row + 1) * boxSize; y++) {
+                    vram[x + y * windowWidth] = color;
+                }
+            }
         }
         // 右の壁
         cout << "#\n";
