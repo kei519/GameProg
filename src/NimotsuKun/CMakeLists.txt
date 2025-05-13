@@ -1,7 +1,9 @@
-add_executable(NimotsuKun main.cpp)
-
 if (MSVC)
+    add_executable(NimotsuKun WIN32 main.cpp)
     add_dependencies(NimotsuKun copy_assets)
 else()
+    add_executable(NimotsuKun main.cpp)
     file(COPY assets DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 endif()
+
+target_link_libraries(NimotsuKun GameLib)

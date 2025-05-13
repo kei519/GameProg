@@ -14,4 +14,3 @@ else()
 endif()
 
 add_subdirectory(NimotsuKun)
-add_subdirectory(2DGraphics1)

@@ -1,10 +1,9 @@
 #include <cstring>
 #include <fstream>
-#include <iostream>
-#include <thread>
-#include <vector>
 
-using namespace std;
+#include <Framework.h>
+
+using namespace GameLib;
 
 #ifdef _DEBUG
 #include <cassert>
@@ -14,8 +13,35 @@ using namespace std;
 #endif
 
 #define UNREACHEABLE(msg)                                                                                              \
-    std::cout << (msg) << std::endl;                                                                                   \
+    GameLib::cout << (msg) << GameLib::endl;                                                                           \
     exit(1)
+
+/**
+ * @brief ファイルの内容を読み込む。
+ *
+ * @note 使用し終わったあとは読み込んだ領域を `delete[]` すること。
+ *
+ * @param path ファイルのパス。
+ * @param buf 読み込んだ内容の先頭を指すポインタ。
+ * @return 正常に読み込めた場合は読み取った内容のサイズを、失敗した場合は `-errno` を返す。
+ */
+int readFile(char const *const path, char **buf)
+{
+    using namespace std;
+
+    ifstream inputFile(path, ios_base::binary);
+
+    inputFile.seekg(0, ios_base::end);
+    auto const fileSize = static_cast<int>(inputFile.tellg());
+    if (fileSize == -1) {
+        return -errno;
+    }
+
+    *buf = new char[fileSize];
+    inputFile.seekg(0, ios_base::beg);
+    inputFile.read(*buf, fileSize);
+    return fileSize;
+}
 
 /**
  * @brief 2次元ベクトルを表す。
@@ -178,37 +204,64 @@ public:
     }
 
     /**
-     * @brief `mapString` から生成。
+     * @brief ヌル終端文字列から生成。
      *
-     * @param mapString マップ文字列。
+     * @param mapString マップ文字列 (ヌル終端)。
      */
-    Map(char const *mapString)
+    Map(char const *const mapString)
     {
         this->initFromMapString(mapString);
     }
 
     /**
-     * @brief `mapString` を用いて初期化。
+     * @brief 文字列から生成。
      *
      * @param mapString マップ文字列。
+     * @param len `mapString` の長さ。
      */
-    void initFromMapString(char const *mapString)
+    Map(char const *const mapString, int const len)
     {
-        auto [width, height] = validateAndGetMapSize(mapString);
+        this->initFromMapString(mapString, len);
+    }
+
+    /**
+     * @brief ヌル終端文字列を用いて初期化。
+     *
+     * @param mapString マップ文字列 (ヌル終端)。
+     */
+    void initFromMapString(char const *const mapString)
+    {
+        auto p = mapString;
+        auto len = 0;
+        while (*p) {
+            len++;
+            p++;
+        }
+        initFromMapString(mapString, len);
+    }
+
+    /**
+     * @brief 文字列を用いて初期化。
+     *
+     * @param mapString マップ文字列。
+     * @param len `mapString` の長さ。
+     */
+    void initFromMapString(char const *const mapString, int const len)
+    {
+        auto [width, height] = validateAndGetMapSize(mapString, len);
         if (isErrorOccurred()) {
             return;
         }
         _width = width;
         _height = height;
 
-        vector<Flag> tmp(width * height);
-        _map.reserve(width * height);
+        _map = new Flag[width * height];
 
         int pos = 0;
-        for (; *mapString; mapString++) {
+        for (auto i = 0; i < len; i++) {
             Flag flag = Flag::None;
             // ここまで来た場合 mapString には改行文字かオブジェクトの文字しか含まれていない
-            switch (*mapString) {
+            switch (mapString[i]) {
                 case '\r':
                 case '\n':
                     continue;
@@ -232,7 +285,7 @@ public:
                     flag |= Flag::Object;
                     break;
             }
-            _map.push_back(flag);
+            _map[pos] = flag;
             pos++;
         }
     }
@@ -319,6 +372,14 @@ public:
         }
     }
 
+    void release()
+    {
+        if (!_map)
+            return;
+        delete[] _map;
+        _map = nullptr;
+    }
+
 private:
     /**
      * @brief 人がいる場所。
@@ -334,7 +395,7 @@ private:
     /**
      * @brief 各マスのフラグ。
      */
-    vector<Flag> _map;
+    Flag *_map = nullptr;
 
     /**
      * @brief 人を `dir` 方向に1マスだけ動かす。このとき動かす先に元々荷物が置かれていた場合、
@@ -391,25 +452,25 @@ private:
      * @param mapString マップの文字列表現。
      * @return マップの大きさ。
      */
-    Vec2D validateAndGetMapSize(const char *mapString)
+    Vec2D validateAndGetMapSize(const char *const mapString, int const len)
     {
         int width = 0;
         int height = 0;
         int count = 0;
-        for (; *mapString; mapString++) {
+        for (auto i = 0; i < len; i++) {
             // CRLF の場合
-            if (*mapString == '\r' && mapString[1] == '\n') {
+            if (mapString[i] == '\r' && i + 1 < len && mapString[i + 1] == '\n') {
                 // CR を読み飛ばす
-                mapString++;
+                i++;
             }
 
-            switch (*mapString) {
+            switch (mapString[i]) {
                 case '\n':
                     if (height == 0) {
                         width = count;
                     } else if (count != width) {
                         _isErrorOccurred = true;
-                        _errorMessage = "マップが長方形ではありません";
+                        _errorMessage = "given map is not a rectangle";
                         return { 0, 0 };
                     }
                     count = 0;
@@ -425,7 +486,7 @@ private:
                     break;
                 default:
                     _isErrorOccurred = true;
-                    _errorMessage = "不正な文字が使われています";
+                    _errorMessage = "given map contains at least one invalid character";
                     return { 0, 0 };
             }
         }
@@ -437,6 +498,8 @@ private:
  * @brief プレイヤーからの入力を保持する。
  */
 char input;
+
+bool playerWantToQuit = false;
 
 /**
  * @brief 現在のマップの状況を保持する。
@@ -483,6 +546,9 @@ void updateGame()
         case 'd':
             dir = Right;
             break;
+        case 'q':
+            playerWantToQuit = true;
+            return;
         default:
             return;
     }
@@ -494,7 +560,19 @@ void updateGame()
  */
 void draw()
 {
-    using namespace std;
+    auto vram = Framework::instance().videoMemory();
+    auto windowWidth = Framework::instance().width();
+    auto windowHeight = Framework::instance().height();
+
+    auto const xMaxSize = windowWidth / map.width();
+    auto const yMaxSize = windowHeight / map.height();
+    auto const boxSize = xMaxSize < yMaxSize ? xMaxSize : yMaxSize;
+
+    if (boxSize <= 0) {
+        cout << "map size is too big to draw in a window" << endl;
+        return;
+    }
+
     // 上の壁を描画
     for (auto col = 0; col < map.width() + 2; col++) {
         cout << "#";
@@ -507,13 +585,19 @@ void draw()
         for (auto col = 0; col < map.width(); col++) {
             // なにもないところにはスペースを描画
             char c = ' ';
+            unsigned color = 0;
+
             auto flag = map.at(col, row);
             if (flag & Object) {
                 // 荷物があるところには o を描画
                 c = 'o';
+                // 荷物があるところは赤で塗る
+                color |= 0xff << 16;
             } else if (flag & Person) {
                 // 人がいるところには p を描画
                 c = 'p';
+                // 人がいるところは緑で塗る
+                color |= 0xff << 8;
             }
             if (flag & Goal) {
                 if (c != ' ') {
@@ -523,8 +607,15 @@ void draw()
                     // 何も無いゴールには . を描画
                     c = '.';
                 }
+                // ゴールは青で塗る
+                color |= 0xff;
             }
             cout << c;
+            for (auto x = col * boxSize; x < (col + 1) * boxSize; x++) {
+                for (auto y = row * boxSize; y < (row + 1) * boxSize; y++) {
+                    vram[x + y * windowWidth] = color;
+                }
+            }
         }
         // 右の壁
         cout << "#\n";
@@ -537,48 +628,70 @@ void draw()
     cout << endl;
 }
 
+void Framework::update()
+{
+    static bool isFirstTime = true;
+    static bool isCleared = false;
+    static bool isErrorOccured = false;
+
+    if (isFirstTime) {
+        isFirstTime = false;
+
+        // ファイルからのマップ読み込み
+        char stagePath[] = "assets/stageData.txt";
+        char *mapString;
+        auto const fileSize = readFile(stagePath, &mapString);
+        if (fileSize < 0) {
+            char msg[256];
+            strerror_s(msg, -fileSize);
+            cout << "failed to read " << stagePath << " (" << msg << ")" << endl;
+            isErrorOccured = true;
+            return;
+        }
+        map.initFromMapString(mapString, fileSize);
+        delete[] mapString;
+        mapString = nullptr;
+
+        if (map.isErrorOccurred()) {
+            cout << map.errorMessage() << endl;
+            isErrorOccured = true;
+            return;
+        }
+        cout << map.errorMessage() << endl;
+
+        draw();
+        // update() 終了後に描画されるため、最初の描画のために一度抜ける
+        return;
+    }
+
+    if (isErrorOccured)
+        return;
+
+    if (checkClear()) {
+        if (!isCleared) {
+            cout << "clear!" << endl;
+            isCleared = true;
+        }
+        return;
+    }
+
+    getInput();
+    updateGame();
+    draw();
+
+    if (playerWantToQuit) {
+        requestEnd();
+    }
+    if (isEndRequested()) {
+        // 終了処理
+        map.release();
+    }
+}
+
 int main()
 {
-    // ファイルからのマップ読み込み
-    char stagePath[] = "assets/stageData.txt";
-    ifstream inputFile(stagePath, ifstream::binary);
-
-    inputFile.seekg(0, ifstream::end);
-    auto fileSize = static_cast<int>(inputFile.tellg());
-    if (fileSize == -1) {
-        char msg[256];
-        strerror_s(msg, errno);
-        cout << stagePath << " を読み込めませんでした (" << msg << ")" << endl;
-        return 1;
-    }
-    char *mapString = new char[fileSize + 1];
-
-    inputFile.seekg(0, ifstream::beg);
-    inputFile.read(mapString, fileSize);
-
-    mapString[fileSize] = '\0';
-    map.initFromMapString(mapString);
-
-    delete[] mapString;
-
-    if (map.isErrorOccurred()) {
-        cout << map.errorMessage() << endl;
-        return 1;
-    }
-    cout << map.errorMessage() << endl;
-
-    draw();
+    Framework framework;
     while (true) {
-        if (checkClear()) {
-            cout << "clear!" << endl;
-            break;
-        }
-
-        getInput();
-        updateGame();
-        draw();
-    }
-    while (true) {
-        this_thread::sleep_for(chrono::hours(100));
+        framework.update();
     }
 }
