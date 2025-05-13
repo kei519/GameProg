@@ -13,5 +13,5 @@ else()
     add_compile_options(-Wall -Wextra -Werror)
 endif()
 
-add_subdirectory(puzzleGame)
+add_subdirectory(NimotsuKun)
 add_subdirectory(2DGraphics1)
