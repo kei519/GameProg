@@ -17,6 +17,33 @@ using namespace GameLib;
     exit(1)
 
 /**
+ * @brief ファイルの内容を読み込む。
+ *
+ * @note 使用し終わったあとは読み込んだ領域を `delete[]` すること。
+ *
+ * @param path ファイルのパス。
+ * @param buf 読み込んだ内容の先頭を指すポインタ。
+ * @return 正常に読み込めた場合は読み取った内容のサイズを、失敗した場合は `-errno` を返す。
+ */
+int readFile(char const *const path, char **buf)
+{
+    using namespace std;
+
+    ifstream inputFile(path, ios_base::binary);
+
+    inputFile.seekg(0, ios_base::end);
+    auto const fileSize = static_cast<int>(inputFile.tellg());
+    if (fileSize == -1) {
+        return -errno;
+    }
+
+    *buf = new char[fileSize];
+    inputFile.seekg(0, ios_base::beg);
+    inputFile.read(*buf, fileSize);
+    return fileSize;
+}
+
+/**
  * @brief 2次元ベクトルを表す。
  */
 struct Vec2D
@@ -177,23 +204,51 @@ public:
     }
 
     /**
-     * @brief `mapString` から生成。
+     * @brief ヌル終端文字列から生成。
      *
-     * @param mapString マップ文字列。
+     * @param mapString マップ文字列 (ヌル終端)。
      */
-    Map(char const *mapString)
+    Map(char const *const mapString)
     {
         this->initFromMapString(mapString);
     }
 
     /**
-     * @brief `mapString` を用いて初期化。
+     * @brief 文字列から生成。
      *
      * @param mapString マップ文字列。
+     * @param len `mapString` の長さ。
      */
-    void initFromMapString(char const *mapString)
+    Map(char const *const mapString, int const len)
     {
-        auto [width, height] = validateAndGetMapSize(mapString);
+        this->initFromMapString(mapString, len);
+    }
+
+    /**
+     * @brief ヌル終端文字列を用いて初期化。
+     *
+     * @param mapString マップ文字列 (ヌル終端)。
+     */
+    void initFromMapString(char const *const mapString)
+    {
+        auto p = mapString;
+        auto len = 0;
+        while (*p) {
+            len++;
+            p++;
+        }
+        initFromMapString(mapString, len);
+    }
+
+    /**
+     * @brief 文字列を用いて初期化。
+     *
+     * @param mapString マップ文字列。
+     * @param len `mapString` の長さ。
+     */
+    void initFromMapString(char const *const mapString, int const len)
+    {
+        auto [width, height] = validateAndGetMapSize(mapString, len);
         if (isErrorOccurred()) {
             return;
         }
@@ -203,10 +258,10 @@ public:
         _map = new Flag[width * height];
 
         int pos = 0;
-        for (; *mapString; mapString++) {
+        for (auto i = 0; i < len; i++) {
             Flag flag = Flag::None;
             // ここまで来た場合 mapString には改行文字かオブジェクトの文字しか含まれていない
-            switch (*mapString) {
+            switch (mapString[i]) {
                 case '\r':
                 case '\n':
                     continue;
@@ -397,19 +452,19 @@ private:
      * @param mapString マップの文字列表現。
      * @return マップの大きさ。
      */
-    Vec2D validateAndGetMapSize(const char *mapString)
+    Vec2D validateAndGetMapSize(const char *const mapString, int const len)
     {
         int width = 0;
         int height = 0;
         int count = 0;
-        for (; *mapString; mapString++) {
+        for (auto i = 0; i < len; i++) {
             // CRLF の場合
-            if (*mapString == '\r' && mapString[1] == '\n') {
+            if (mapString[i] == '\r' && i + 1 < len && mapString[i + 1] == '\n') {
                 // CR を読み飛ばす
-                mapString++;
+                i++;
             }
 
-            switch (*mapString) {
+            switch (mapString[i]) {
                 case '\n':
                     if (height == 0) {
                         width = count;
@@ -584,26 +639,18 @@ void Framework::update()
 
         // ファイルからのマップ読み込み
         char stagePath[] = "assets/stageData.txt";
-        std::ifstream inputFile(stagePath, std::ifstream::binary);
-
-        inputFile.seekg(0, std::ifstream::end);
-        auto fileSize = static_cast<int>(inputFile.tellg());
-        if (fileSize == -1) {
+        char *mapString;
+        auto const fileSize = readFile(stagePath, &mapString);
+        if (fileSize < 0) {
             char msg[256];
-            strerror_s(msg, errno);
+            strerror_s(msg, -fileSize);
             cout << "failed to read " << stagePath << " (" << msg << ")" << endl;
             isErrorOccured = true;
             return;
         }
-        char *mapString = new char[fileSize + 1];
-
-        inputFile.seekg(0, std::ifstream::beg);
-        inputFile.read(mapString, fileSize);
-
-        mapString[fileSize] = '\0';
-        map.initFromMapString(mapString);
-
+        map.initFromMapString(mapString, fileSize);
         delete[] mapString;
+        mapString = nullptr;
 
         if (map.isErrorOccurred()) {
             cout << map.errorMessage() << endl;
