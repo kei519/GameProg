@@ -1,6 +1,5 @@
 #include <cstring>
 #include <fstream>
-#include <vector>
 
 #include <Framework.h>
 
@@ -201,7 +200,7 @@ public:
         _width = width;
         _height = height;
 
-        _map.reserve(width * height);
+        _map = new Flag[width * height];
 
         int pos = 0;
         for (; *mapString; mapString++) {
@@ -231,7 +230,7 @@ public:
                     flag |= Flag::Object;
                     break;
             }
-            _map.push_back(flag);
+            _map[pos] = flag;
             pos++;
         }
     }
@@ -318,6 +317,14 @@ public:
         }
     }
 
+    void release()
+    {
+        if (!_map)
+            return;
+        delete[] _map;
+        _map = nullptr;
+    }
+
 private:
     /**
      * @brief 人がいる場所。
@@ -333,7 +340,7 @@ private:
     /**
      * @brief 各マスのフラグ。
      */
-    std::vector<Flag> _map;
+    Flag *_map = nullptr;
 
     /**
      * @brief 人を `dir` 方向に1マスだけ動かす。このとき動かす先に元々荷物が置かれていた場合、
@@ -630,6 +637,7 @@ void Framework::update()
     }
     if (isEndRequested()) {
         // 終了処理
+        map.release();
     }
 }
 
