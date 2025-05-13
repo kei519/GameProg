@@ -437,6 +437,8 @@ private:
  */
 char input;
 
+bool playerWantToQuit = false;
+
 /**
  * @brief 現在のマップの状況を保持する。
  */
@@ -482,6 +484,9 @@ void updateGame()
         case 'd':
             dir = Right;
             break;
+        case 'q':
+            playerWantToQuit = true;
+            return;
         default:
             return;
     }
@@ -619,6 +624,13 @@ void Framework::update()
     getInput();
     updateGame();
     draw();
+
+    if (playerWantToQuit) {
+        requestEnd();
+    }
+    if (isEndRequested()) {
+        // 終了処理
+    }
 }
 
 int main()
