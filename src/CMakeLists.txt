@@ -14,3 +14,4 @@ else()
 endif()
 
 add_subdirectory(NimotsuKun)
+add_subdirectory(DisplayImage)
