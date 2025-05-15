@@ -7,3 +7,4 @@ else()
 endif()
 
 target_link_libraries(NimotsuKun GameLib)
+target_link_libraries(NimotsuKun Util)

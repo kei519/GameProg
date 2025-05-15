@@ -1,9 +1,10 @@
 #include <cstring>
-#include <fstream>
 
 #include <Framework.h>
-
 using namespace GameLib;
+
+#include <Util.hpp>
+using namespace Util;
 
 #ifdef _DEBUG
 #include <cassert>
@@ -15,33 +16,6 @@ using namespace GameLib;
 #define UNREACHEABLE(msg)                                                                                              \
     GameLib::cout << (msg) << GameLib::endl;                                                                           \
     exit(1)
-
-/**
- * @brief ファイルの内容を読み込む。
- *
- * @note 使用し終わったあとは読み込んだ領域を `delete[]` すること。
- *
- * @param path ファイルのパス。
- * @param buf 読み込んだ内容の先頭を指すポインタ。
- * @return 正常に読み込めた場合は読み取った内容のサイズを、失敗した場合は `-errno` を返す。
- */
-int readFile(char const *const path, char **buf)
-{
-    using namespace std;
-
-    ifstream inputFile(path, ios_base::binary);
-
-    inputFile.seekg(0, ios_base::end);
-    auto const fileSize = static_cast<int>(inputFile.tellg());
-    if (fileSize == -1) {
-        return -errno;
-    }
-
-    *buf = new char[fileSize];
-    inputFile.seekg(0, ios_base::beg);
-    inputFile.read(*buf, fileSize);
-    return fileSize;
-}
 
 /**
  * @brief 2次元ベクトルを表す。
@@ -640,7 +614,7 @@ void Framework::update()
         // ファイルからのマップ読み込み
         char stagePath[] = "assets/stageData.txt";
         char *mapString;
-        auto const fileSize = readFile(stagePath, &mapString);
+        auto const fileSize = readFile(stagePath, mapString);
         if (fileSize < 0) {
             char msg[256];
             strerror_s(msg, -fileSize);
