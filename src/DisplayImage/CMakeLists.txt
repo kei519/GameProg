@@ -7,3 +7,4 @@ else()
 endif()
 
 target_link_libraries(DisplayImage GameLib)
+target_link_libraries(DisplayImage Util)
